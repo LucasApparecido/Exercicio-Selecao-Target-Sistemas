@@ -5,8 +5,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Random;
 import java.text.DecimalFormat;
+import java.util.Calendar;
+import java.util.Random;
 
 public class Ex3_Faturamento {
 
@@ -31,12 +32,18 @@ public class Ex3_Faturamento {
     private static void generateJsonFile(String filePath) {
         JSONArray revenues = new JSONArray();
         Random random = new Random();
+        Calendar calendar = Calendar.getInstance();
 
         for (int i = 1; i <= 30; i++) {
             JSONObject dailyRevenue = new JSONObject();
             double value = random.nextDouble() * 1000;
+            calendar.set(Calendar.DAY_OF_MONTH, i);
+            int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+            String dayName = getDayName(dayOfWeek);
+
             dailyRevenue.put("dia", i);
             dailyRevenue.put("valor", value);
+            dailyRevenue.put("diaDaSemana", dayName);
             revenues.put(dailyRevenue);
         }
 
@@ -51,6 +58,19 @@ public class Ex3_Faturamento {
         }
     }
 
+    private static String getDayName(int dayOfWeek) {
+        switch (dayOfWeek) {
+            case Calendar.SUNDAY: return "Domingo";
+            case Calendar.MONDAY: return "Segunda-feira";
+            case Calendar.TUESDAY: return "Terça-feira";
+            case Calendar.WEDNESDAY: return "Quarta-feira";
+            case Calendar.THURSDAY: return "Quinta-feira";
+            case Calendar.FRIDAY: return "Sexta-feira";
+            case Calendar.SATURDAY: return "Sábado";
+            default: return "";
+        }
+    }
+
     private static final DecimalFormat df = new DecimalFormat("0.00");
 
     private static void calculateRevenue(JSONArray revenues) {
@@ -60,8 +80,11 @@ public class Ex3_Faturamento {
         int daysWithRevenue = 0;
 
         for (int i = 0; i < revenues.length(); i++) {
-            double value = revenues.getJSONObject(i).getDouble("valor");
-            if (value > 0) {
+            JSONObject dailyRevenue = revenues.getJSONObject(i);
+            double value = dailyRevenue.getDouble("valor");
+            String dayOfWeek = dailyRevenue.getString("diaDaSemana");
+
+            if (value > 0 && !dayOfWeek.equals("Sábado") && !dayOfWeek.equals("Domingo")) {
                 totalRevenue += value;
                 daysWithRevenue++;
                 if (value < minRevenue) {
@@ -77,8 +100,11 @@ public class Ex3_Faturamento {
 
         int daysAboveAverage = 0;
         for (int i = 0; i < revenues.length(); i++) {
-            double value = revenues.getJSONObject(i).getDouble("valor");
-            if (value > averageRevenue) {
+            JSONObject dailyRevenue = revenues.getJSONObject(i);
+            double value = dailyRevenue.getDouble("valor");
+            String dayOfWeek = dailyRevenue.getString("diaDaSemana");
+
+            if (value > averageRevenue && !dayOfWeek.equals("Sábado") && !dayOfWeek.equals("Domingo")) {
                 daysAboveAverage++;
             }
         }
